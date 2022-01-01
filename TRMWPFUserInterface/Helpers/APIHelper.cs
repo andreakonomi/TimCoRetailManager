@@ -21,7 +21,7 @@ namespace TRMDesktopUI.Helpers
 
         private void InitializeClient()
         {
-            //loads the api url from the app.config
+            //loads the base api url from the app.config
             string api = ConfigurationManager.AppSettings["api"];
 
             apiClient = new HttpClient();
