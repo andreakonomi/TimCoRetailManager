@@ -42,14 +42,14 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
-        public bool IsErrorVisible
-        {
-            get
-            {
-                return _errorMessage?.Length > 0;
-            }
-        }
+        /// <summary>
+        /// Bools that indicates if the errorMessage textbox should be visible
+        /// </summary>
+        public bool IsErrorVisible => _errorMessage?.Length > 0;
 
+        /// <summary>
+        /// Holds the triggered error message
+        /// </summary>
         private string _errorMessage;
 
         public string ErrorMessage
@@ -72,8 +72,8 @@ namespace TRMDesktopUI.ViewModels
         {
             try
             {
+                ErrorMessage = "";
                 var result = await _apiHelper.Authenticate(UserName, Password);
-
             }
             catch (Exception ex)
             {
