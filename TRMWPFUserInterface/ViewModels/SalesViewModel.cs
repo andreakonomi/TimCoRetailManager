@@ -34,9 +34,10 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
-        private string _itemQuantity;
+        //Eventhough it is bound on a textbox it is automatically converted to int from Caliburn Micro
+        private int _itemQuantity;
 
-        public string ItemQuantity
+        public int ItemQuantity
         {
             get { return _itemQuantity; }
             set 
