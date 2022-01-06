@@ -5,14 +5,39 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TRMDesktopUI.Library.Api;
+using TRMDesktopUI.Library.Models;
 
 namespace TRMDesktopUI.ViewModels
 {
     public class SalesViewModel : Screen
     {
-        private BindingList<string> _products;
+        IProductEndpoint _productEndpoint;
+        public SalesViewModel(IProductEndpoint productEndpoint)
+        {
+            _productEndpoint = productEndpoint;
+        }
 
-        public BindingList<string> Products
+        protected override async void OnViewLoaded(object view)
+        {
+            base.OnViewLoaded(view);
+            await LoadProducts();
+        }
+
+        /// <summary>
+        /// Calls the product data from the instance facing the api endpoint for the ui layer.
+        /// Loads the data on the binding list of products.
+        /// </summary>
+        /// <returns></returns>
+        private async Task LoadProducts()
+        {
+            var prodctList = await _productEndpoint.GetAll();
+            Products = new BindingList<ProductModel>(prodctList);
+        }
+
+        private BindingList<ProductModel> _products;
+
+        public BindingList<ProductModel> Products
         {
             get { return _products; }
             set 
@@ -22,9 +47,9 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
-        private BindingList<string> _cart;
+        private BindingList<ProductModel> _cart;
 
-        public BindingList<string> Cart
+        public BindingList<ProductModel> Cart
         {
             get { return _cart; }
             set
@@ -66,6 +91,7 @@ namespace TRMDesktopUI.ViewModels
         }
 
         public bool CanCheckOut => true;  // add check
+
 
         public void CheckOut()
         {
