@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TRMDesktopUI.Library.Api;
+using TRMDesktopUI.Library.Helpers;
 using TRMDesktopUI.Library.Models;
 
 namespace TRMDesktopUI.ViewModels
@@ -14,9 +15,12 @@ namespace TRMDesktopUI.ViewModels
     public class SalesViewModel : Screen
     {
         IProductEndpoint _productEndpoint;
-        public SalesViewModel(IProductEndpoint productEndpoint)
+        IConfigHelper _configHelper;
+
+        public SalesViewModel(IProductEndpoint productEndpoint, IConfigHelper configHelper)
         {
             _productEndpoint = productEndpoint;
+            _configHelper = configHelper;
         }
 
         protected override async void OnViewLoaded(object view)
@@ -41,15 +45,15 @@ namespace TRMDesktopUI.ViewModels
         public BindingList<ProductModel> Products
         {
             get { return _products; }
-            set 
-            { 
+            set
+            {
                 _products = value;
                 NotifyOfPropertyChange(() => Products);
             }
         }
 
         private ProductModel _selectedProduct;
-        
+
         /// <summary>
         /// Whenever the selected product is changed check to see if the condition for 
         /// enabling the AddToCart button are satisfied.
@@ -58,7 +62,7 @@ namespace TRMDesktopUI.ViewModels
         public ProductModel SelectedProduct
         {
             get { return _selectedProduct; }
-            set 
+            set
             {
                 _selectedProduct = value;
                 NotifyOfPropertyChange(() => SelectedProduct);
@@ -92,7 +96,7 @@ namespace TRMDesktopUI.ViewModels
         public int ItemQuantity
         {
             get { return _itemQuantity; }
-            set 
+            set
             {
                 _itemQuantity = value;
                 NotifyOfPropertyChange(() => ItemQuantity);
@@ -104,11 +108,41 @@ namespace TRMDesktopUI.ViewModels
         /// Calculates the subtotal of the items in the cart. This is called to be updated everytime a change
         /// in the cart happens.
         /// </summary>
-        public string SubTotal => Cart.Sum(x => x.Product.RetailPrice * x.QuantityInCart).ToString("C", new CultureInfo("en-US"));
+        public string SubTotal => CalculateSubTotal().ToString("C", new CultureInfo("en-US"));
 
-        public string Total => "$0.00";  // add calculation
+        private decimal CalculateSubTotal()
+        {
+            return Cart.Sum(x => x.Product.RetailPrice * x.QuantityInCart);
+        }
 
-        public string Tax => "$0.00";  // add calculation
+        /// <summary>
+        /// in my humble opinion this is wrong, you redo once again the looping through items when you have
+        /// already done that to calculate the subtotal and tax. CAn just get it from string convert and add
+        /// it again. Or store it somewhere. No need to redo the loop again.
+        /// </summary>
+        public string Total => (CalculateSubTotal() + CalculateTax()).ToString("C", new CultureInfo("en-US"));
+
+        public string Tax => CalculateTax().ToString("C", new CultureInfo("en-US"));
+
+        private decimal CalculateTax()
+        {
+            //old implementation before tax included
+            //return Cart.Sum(x => x.Product.RetailPrice * x.QuantityInCart).ToString("C", new CultureInfo("en-US"));
+
+            decimal taxAmount = 0;
+            decimal taxRate = _configHelper.GetTaxRate() / 100;
+
+            foreach (CartItemModel item in Cart)
+            {
+                if (item.Product.IsTaxable)
+                {
+                    taxAmount += item.Product.RetailPrice * item.QuantityInCart * taxRate;
+                }
+            }
+
+            return taxAmount;
+        }
+
 
         /// <summary>
         /// Enables disables the AddToCart button depending on the condition of QuantityInStock
@@ -148,13 +182,17 @@ namespace TRMDesktopUI.ViewModels
             ItemQuantity = 1;
 
             NotifyOfPropertyChange(() => SubTotal);
+            NotifyOfPropertyChange(() => Tax);
+            NotifyOfPropertyChange(() => Total);
         }
 
         public bool CanRemoveFromCart => true;  // add check
 
         public void RemoveFromCart()
         {
-
+            NotifyOfPropertyChange(() => SubTotal);
+            NotifyOfPropertyChange(() => Tax);
+            NotifyOfPropertyChange(() => Total);
         }
 
         public bool CanCheckOut => true;  // add check
