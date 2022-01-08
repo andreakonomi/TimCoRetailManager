@@ -21,6 +21,11 @@ namespace TRMDesktopUI.ViewModels
         {
             _apiHelper = apiHelper;
             _events = events;
+
+#if DEBUG
+            UserName = "tim@iamtimcorey.com";
+            Password = "Pwd12345.";
+#endif
         }
 
         public string UserName
