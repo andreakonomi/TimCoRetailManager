@@ -15,12 +15,14 @@ namespace TRMDesktopUI.ViewModels
     public class SalesViewModel : Screen
     {
         IProductEndpoint _productEndpoint;
+        ISaleEndpoint _saleEndpoint;
         IConfigHelper _configHelper;
 
-        public SalesViewModel(IProductEndpoint productEndpoint, IConfigHelper configHelper)
+        public SalesViewModel(IProductEndpoint productEndpoint, IConfigHelper configHelper, ISaleEndpoint saleEndpoint)
         {
             _productEndpoint = productEndpoint;
             _configHelper = configHelper;
+            _saleEndpoint = saleEndpoint;
         }
 
         protected override async void OnViewLoaded(object view)
@@ -188,8 +190,12 @@ namespace TRMDesktopUI.ViewModels
             NotifyOfPropertyChange(() => SubTotal);
             NotifyOfPropertyChange(() => Tax);
             NotifyOfPropertyChange(() => Total);
+            NotifyOfPropertyChange(() => CanCheckOut);
         }
 
+        /// <summary>
+        /// Enables/disables the RemoveFromCart button.
+        /// </summary>
         public bool CanRemoveFromCart => true;  // add check
 
         public void RemoveFromCart()
@@ -197,14 +203,33 @@ namespace TRMDesktopUI.ViewModels
             NotifyOfPropertyChange(() => SubTotal);
             NotifyOfPropertyChange(() => Tax);
             NotifyOfPropertyChange(() => Total);
+            NotifyOfPropertyChange(() => CanCheckOut);
         }
 
-        public bool CanCheckOut => true;  // add check
+        /// <summary>
+        /// Enables/disables the CheckOut button.
+        /// </summary>
+        public bool CanCheckOut => Cart.Count > 0;
 
 
-        public void CheckOut()
+        public async Task CheckOut()
         {
+            // create the model that will be sent
+            SaleModel sale = new SaleModel();
 
+            //populate the model with the data
+            //TODO: Convert this to linq
+            foreach (var item in Cart)
+            {
+                sale.SaleDetails.Add(new SaleDetailModel
+                {
+                    ProductId = item.Product.Id,
+                    Quantity = item.QuantityInCart
+                });
+            }
+
+            // post to api
+            await _saleEndpoint.PostSale(sale);
         }
 
     }

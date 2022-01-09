@@ -24,6 +24,8 @@ namespace TRMDesktopUI.Library.Helpers
             bool isValidtaxRate = decimal.TryParse(rateText, out decimal output);
 
             return !isValidtaxRate ? throw new ConfigurationErrorsException("The tax rate is not setup properly!") : output;
+            //TODO: Move this from config to the API.
+            //like at logical, make a config table and store there such values.When needed call through the api that data.
         }
     }
 }
