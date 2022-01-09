@@ -20,6 +20,7 @@ namespace TRMDataManager.Controllers
             string userId = RequestContext.Principal.Identity.GetUserId();
             UserData data = new UserData();
 
+            //TODO : If no user is found throws exception. Fix 
             return data.GetUserById(userId).First();
         }
 
