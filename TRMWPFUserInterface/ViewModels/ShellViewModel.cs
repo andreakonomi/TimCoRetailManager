@@ -14,18 +14,15 @@ namespace TRMDesktopUI.ViewModels
         // this says Im registered on this web of events
         private readonly IEventAggregator _events;
         private SalesViewModel _salesVM;
-        private SimpleContainer _container;
 
-        public ShellViewModel(IEventAggregator events, SalesViewModel salesVM,
-            SimpleContainer container)
+        public ShellViewModel(IEventAggregator events, SalesViewModel salesVM)
         {
             _events = events;
             _salesVM = salesVM;
-            _container = container; // to request new instances when we want
 
             _events.Subscribe(this);
 
-            ActivateItem(_container.GetInstance<LoginViewModel>());
+            ActivateItem(IoC.Get<LoginViewModel>());
         }
 
         // subscriber to the LogOnEvent event
