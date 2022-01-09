@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace TRMDataManager.Models
+namespace TRMDataManager.Library.Models
 {
     /// <summary>
     /// A model for posting sale detail to the db from the api.
