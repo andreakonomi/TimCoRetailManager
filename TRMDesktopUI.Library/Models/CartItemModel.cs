@@ -15,9 +15,5 @@ namespace TRMDesktopUI.Library.Models
     {
         public ProductModel Product { get; set; }
         public int QuantityInCart { get; set; }
-        /// <summary>
-        /// Display property for the listbox.
-        /// </summary>
-        public string DisplayText => $"{Product.ProductName} ({QuantityInCart})";
     }
 }

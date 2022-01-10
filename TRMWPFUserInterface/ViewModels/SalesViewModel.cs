@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿using AutoMapper;
+using Caliburn.Micro;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using TRMDesktopUI.Library.Api;
 using TRMDesktopUI.Library.Helpers;
 using TRMDesktopUI.Library.Models;
+using TRMDesktopUI.Models;
 
 namespace TRMDesktopUI.ViewModels
 {
@@ -17,12 +19,15 @@ namespace TRMDesktopUI.ViewModels
         IProductEndpoint _productEndpoint;
         ISaleEndpoint _saleEndpoint;
         IConfigHelper _configHelper;
+        IMapper _mapper;
 
-        public SalesViewModel(IProductEndpoint productEndpoint, IConfigHelper configHelper, ISaleEndpoint saleEndpoint)
+        public SalesViewModel(IProductEndpoint productEndpoint, IConfigHelper configHelper,
+            ISaleEndpoint saleEndpoint, IMapper mapper)
         {
             _productEndpoint = productEndpoint;
             _configHelper = configHelper;
             _saleEndpoint = saleEndpoint;
+            _mapper = mapper;
         }
 
         protected override async void OnViewLoaded(object view)
@@ -39,12 +44,15 @@ namespace TRMDesktopUI.ViewModels
         private async Task LoadProducts()
         {
             var prodctList = await _productEndpoint.GetAll();
-            Products = new BindingList<ProductModel>(prodctList);
+
+            // map ProdcutModel that comes from the api to out Display Model.
+            var products = _mapper.Map<List<ProductDisplayModel>>(prodctList);
+            Products = new BindingList<ProductDisplayModel>(products);
         }
 
-        private BindingList<ProductModel> _products;
+        private BindingList<ProductDisplayModel> _products;
 
-        public BindingList<ProductModel> Products
+        public BindingList<ProductDisplayModel> Products
         {
             get { return _products; }
             set
@@ -54,14 +62,14 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
-        private ProductModel _selectedProduct;
+        private ProductDisplayModel _selectedProduct;
 
         /// <summary>
         /// Whenever the selected product is changed check to see if the condition for 
         /// enabling the AddToCart button are satisfied.
         /// The set is triggered by the binding we put on the ListBox Products SelectedItem
         /// </summary>
-        public ProductModel SelectedProduct
+        public ProductDisplayModel SelectedProduct
         {
             get { return _selectedProduct; }
             set
@@ -76,9 +84,9 @@ namespace TRMDesktopUI.ViewModels
         /// The collection of items on the shopping cart of the client. This is bound with a 
         /// cart specific model.
         /// </summary>
-        private BindingList<CartItemModel> _cart = new BindingList<CartItemModel>();
+        private BindingList<CartItemDisplayModel> _cart = new BindingList<CartItemDisplayModel>();
 
-        public BindingList<CartItemModel> Cart
+        public BindingList<CartItemDisplayModel> Cart
         {
             get { return _cart; }
             set
@@ -138,7 +146,7 @@ namespace TRMDesktopUI.ViewModels
                 .Where(x => x.Product.IsTaxable == true)
                 .Sum(x => x.Product.RetailPrice * x.QuantityInCart * taxRate);
 
-            //foreach (CartItemModel item in Cart)
+            //foreach (CartItemDisplayModel item in Cart)
             //{
             //    if (item.Product.IsTaxable)
             //    {
@@ -157,26 +165,22 @@ namespace TRMDesktopUI.ViewModels
         public bool CanAddToCart => ItemQuantity != 0 && SelectedProduct?.QuantityInStock >= ItemQuantity;
 
         /// <summary>
-        /// Takes the selected item of type ProductModel and transforms it
-        /// to CartItemModel that is better adapted for the cart.
+        /// Takes the selected item of type ProductDisplayModel and transforms it
+        /// to CartItemDisplayModel that is better adapted for the cart.
         /// </summary>
         public void AddToCart()
         {
             // * tricky why its the same object from the two persepectives!
-            CartItemModel existingItem = Cart.FirstOrDefault(x => x.Product == SelectedProduct);
+            CartItemDisplayModel existingItem = Cart.FirstOrDefault(x => x.Product == SelectedProduct);
 
             // if this is the second or more time we add the same type on the cart dont add new update the quantity in the cart
             if (existingItem != null)
             {
-                existingItem.QuantityInCart += ItemQuantity;    //both hold a reference to that specific address of ProductModel, only one loaded on memory
-                // HACK - Since we are updating a property of the bounded object the list doesnt get updated on the view
-                //it sees the same references as before no need to update myself everything ok, doesnt look at the properties
-                Cart.Remove(existingItem);
-                Cart.Add(existingItem);
+                existingItem.QuantityInCart += ItemQuantity;    //both hold a reference to that specific address of ProductDisplayModel, only one loaded on memory
             }
             else
             {
-                CartItemModel item = new CartItemModel
+                CartItemDisplayModel item = new CartItemDisplayModel
                 {
                     Product = SelectedProduct,
                     QuantityInCart = ItemQuantity
