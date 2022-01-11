@@ -80,6 +80,22 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
+        private CartItemDisplayModel _selectedCartItem;
+
+        /// <summary>
+        /// Captures the selected item on the shopping cart.
+        /// </summary>
+        public CartItemDisplayModel SelectedCartItem
+        {
+            get { return _selectedCartItem; }
+            set
+            {
+                _selectedCartItem = value;
+                NotifyOfPropertyChange(() => SelectedCartItem);
+                NotifyOfPropertyChange(() => CanRemoveFromCart);
+            }
+        }
+
         /// <summary>
         /// The collection of items on the shopping cart of the client. This is bound with a 
         /// cart specific model.
@@ -200,10 +216,24 @@ namespace TRMDesktopUI.ViewModels
         /// <summary>
         /// Enables/disables the RemoveFromCart button.
         /// </summary>
-        public bool CanRemoveFromCart => true;  // add check
+        public bool CanRemoveFromCart => SelectedCartItem != null && SelectedCartItem.Product.QuantityInStock > 0;
 
+        /// <summary>
+        /// Removes the Selected Cart Item from the cart.
+        /// </summary>
         public void RemoveFromCart()
         {
+            SelectedCartItem.Product.QuantityInStock++;
+
+            if (SelectedCartItem.QuantityInCart > 1)
+            {
+                SelectedCartItem.QuantityInCart -= 1;
+            }
+            else
+            {
+                Cart.Remove(SelectedCartItem);
+            }
+
             NotifyOfPropertyChange(() => SubTotal);
             NotifyOfPropertyChange(() => Tax);
             NotifyOfPropertyChange(() => Total);
