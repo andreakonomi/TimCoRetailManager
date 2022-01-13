@@ -80,6 +80,17 @@ namespace TRMDesktopUI.ViewModels
             }
         }
 
+        private async Task ResetSalesViewModel()
+        {
+            Cart = new BindingList<CartItemDisplayModel>();
+            await LoadProducts();
+
+            NotifyOfPropertyChange(() => SubTotal);
+            NotifyOfPropertyChange(() => Tax);
+            NotifyOfPropertyChange(() => Total);
+            NotifyOfPropertyChange(() => CanCheckOut);
+        }
+
         private CartItemDisplayModel _selectedCartItem;
 
         /// <summary>
@@ -216,7 +227,7 @@ namespace TRMDesktopUI.ViewModels
         /// <summary>
         /// Enables/disables the RemoveFromCart button.
         /// </summary>
-        public bool CanRemoveFromCart => SelectedCartItem != null && SelectedCartItem.Product.QuantityInStock > 0;
+        public bool CanRemoveFromCart => SelectedCartItem != null && SelectedCartItem.QuantityInCart > 0;
 
         /// <summary>
         /// Removes the Selected Cart Item from the cart.
@@ -238,6 +249,7 @@ namespace TRMDesktopUI.ViewModels
             NotifyOfPropertyChange(() => Tax);
             NotifyOfPropertyChange(() => Total);
             NotifyOfPropertyChange(() => CanCheckOut);
+            NotifyOfPropertyChange(() => CanAddToCart);
         }
 
         /// <summary>
@@ -264,6 +276,8 @@ namespace TRMDesktopUI.ViewModels
 
             // post to api
             await _saleEndpoint.PostSale(sale);
+
+            await ResetSalesViewModel();
         }
 
     }
