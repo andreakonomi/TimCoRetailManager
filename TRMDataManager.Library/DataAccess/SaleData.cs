@@ -101,7 +101,7 @@ namespace TRMDataManager.Library.DataAccess
                         sql.SaveDataInTranscation("dbo.spSaleDetail_Insert", x);
                     });
 
-                    //sql.CommitTransaction(); no need to call explicitly called when Dispose happens
+                    sql.CommitTransaction();
                 }
                 catch
                 {
