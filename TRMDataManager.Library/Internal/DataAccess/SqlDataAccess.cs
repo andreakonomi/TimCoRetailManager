@@ -13,7 +13,7 @@ namespace TRMDataManager.Library.Internal.DataAccess
     /// <summary>
     /// Implements the low level connection to the db. Which will be hidden from the consumer.
     /// </summary>
-    internal class SqlDataAccess
+    internal class SqlDataAccess : IDisposable
     {
         /// <summary>
         /// Gets the connection string from the web.config for the given name. Grabs the config file
@@ -52,5 +52,74 @@ namespace TRMDataManager.Library.Internal.DataAccess
                     commandType: CommandType.StoredProcedure);
             }
         }
+
+        /// <summary>
+        /// Holds an instance of IdbConnection for talking to the database.
+        /// </summary>
+        private IDbConnection _connection;
+
+        /// <summary>
+        /// Holds a transaction instance so it can be approachable by a set of methods in the class
+        /// to complete the transaction.
+        /// </summary>
+        private IDbTransaction _transaction;
+
+        /// <summary>
+        /// Starts of the connection and sql transaction.
+        /// </summary>
+        /// <param name="connectionStringName"></param>
+        public void StartTranscation(string connectionStringName)
+        {
+            string connectionString = GetConnectionString(connectionStringName);
+
+            _connection = new SqlConnection(connectionString);
+            _connection.Open();
+
+            _transaction = _connection.BeginTransaction();
+        }
+
+        public void SaveDataInTranscation<T>(string storedProcedure, T parameters)
+        {
+            //last argument associates the command with the transaction we are using
+            _connection.Execute(storedProcedure, parameters,
+                commandType: CommandType.StoredProcedure, transaction: _transaction);
+        }
+
+        public List<T> LoadDataInTranscation<T, U>(string storedProcedure, U parameters)
+        {
+                List<T> rows = _connection.Query<T>(storedProcedure, parameters,
+                    commandType: CommandType.StoredProcedure, transaction: _transaction).ToList();
+
+                return rows;
+        }
+
+        /// <summary>
+        /// Apply the changes to the db (successful transaction).
+        /// </summary>
+        public void CommitTransaction()
+        {
+            _transaction?.Commit();
+            _connection?.Close();
+        }
+
+        /// <summary>
+        /// Rollback all changes made by the current transaction.
+        /// </summary>
+        public void RollbackTransaction()
+        {
+            _transaction?.Rollback();
+            _connection?.Close();
+        }
+
+        public void Dispose()
+        {
+            CommitTransaction();
+        }
+
+        // Open connect/start transcation method
+        // load using the transaction
+        // save using the transaction
+        // Close connection/stop transaction method
+        // Dispose **
     }
 }

@@ -75,25 +75,44 @@ namespace TRMDataManager.Library.DataAccess
                 CashierId = cashierId
             };
 
-            // Save the sale model
-            SqlDataAccess sql = new SqlDataAccess();
-            sql.SaveData("dbo.spSale_Insert", sale, "TRMData");
-
-            // Get the ID from the sale mode
-
-            // Here the issue is that the stored procedure above should return the created Id but we dont capture it
-            // instead of creating another stored procedure we can create another version of the generic LoadData that
-            // has the stored procedure with a parameter specified as return type. Dapper gives the solution,
-            // any other orm should give as well I suppose.
-            sale.Id = sql.LoadData<int, dynamic>("spSale_Lookup", new {sale.CashierId, sale.SaleDate }, "TRMData").FirstOrDefault();
-
-            // Finish filling in the sale detail models
-            details.ForEach(x =>
+            using (SqlDataAccess sql = new SqlDataAccess())
             {
-                x.SaleId = sale.Id;
-                // Save the sale detail model
-                sql.SaveData("dbo.spSaleDetail_Insert", x, "TRMData");
-            });
+                try
+                {
+                    sql.StartTranscation("TRMData");
+
+                    // Save the sale model
+                    sql.SaveDataInTranscation("dbo.spSale_Insert", sale);
+
+                    // Here the issue is that the stored procedure above should return the created Id but we dont capture it
+                    // instead of creating another stored procedure we can create another version of the generic LoadData that
+                    // has the stored procedure with a parameter specified as return type. Dapper gives the solution,
+                    // any other orm should give as well I suppose.
+
+                    // Get the ID from the sale mode
+                    sale.Id = sql.LoadDataInTranscation<int, dynamic>("spSale_Lookup", new { sale.CashierId, sale.SaleDate }).FirstOrDefault();
+
+                    // Finish filling in the sale detail models
+                    details.ForEach(x =>
+                    {
+                        x.SaleId = sale.Id;
+
+                        // Save the sale detail model
+                        sql.SaveDataInTranscation("dbo.spSaleDetail_Insert", x);
+                    });
+
+                    //sql.CommitTransaction(); no need to call explicitly called when Dispose happens
+                }
+                catch
+                {
+                    // if you catch ex and throw it will rethrow a new exception, like this now it throws the original exception
+                    sql.RollbackTransaction();
+                    throw;
+                }            
+            }
+
+
+
         }
     }
 }
