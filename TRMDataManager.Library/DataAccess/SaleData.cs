@@ -14,6 +14,11 @@ namespace TRMDataManager.Library.DataAccess
     /// </summary>
     public class SaleData
     {
+        /// <summary>
+        /// Saves a new sale to the database.
+        /// </summary>
+        /// <param name="saleInfo">The model containing the data about the sale.</param>
+        /// <param name="cashierId">The id of the cashier who made the sale.</param>
         public void SaveSale(SaleModel saleInfo, string cashierId)
         {
             //TODO: Make this SOLID/DRY/Better
@@ -110,9 +115,19 @@ namespace TRMDataManager.Library.DataAccess
                     throw;
                 }            
             }
+        }
 
+        /// <summary>
+        /// Returns a Report with financial data for each sale along with the information
+        /// about the cashier who made each sale.
+        /// </summary>
+        public List<SaleReportModel> GetSaleReport()
+        {
+            SqlDataAccess sql = new SqlDataAccess();
 
+            var output = sql.LoadData<SaleReportModel, dynamic>("dbo.spSale_SaleReport", new { }, "TRMData");
 
+            return output;
         }
     }
 }
