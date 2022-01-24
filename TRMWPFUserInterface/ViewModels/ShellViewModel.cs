@@ -38,6 +38,11 @@ namespace TRMDesktopUI.ViewModels
             TryClose();
         }
 
+        public void UserManagment()
+        {
+            ActivateItem(IoC.Get<UserDisplayViewModel>()); 
+        }
+
         public void LogOut()
         {
             _user.ResetUserModel();     // Clear method inside the model itself, special case when you put a method in a model.
