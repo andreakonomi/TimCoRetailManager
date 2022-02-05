@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,13 @@ namespace TRMDataManager.Library.DataAccess
     /// </summary>
     public class SaleData
     {
+        private readonly IConfiguration _config;
+
+        public SaleData(IConfiguration config)
+        {
+            _config = config;
+        }
+
         /// <summary>
         /// Saves a new sale to the database.
         /// </summary>
@@ -35,7 +43,7 @@ namespace TRMDataManager.Library.DataAccess
             // Finish filling in the sale detail models
             // Save the sale detail models
             #endregion
-            ProductData products = new ProductData();
+            ProductData products = new ProductData(_config);
             List<SaleDetailDBModel> details = new List<SaleDetailDBModel>();
             decimal sumSubTotal = 0, sumTax = 0;
 
@@ -80,7 +88,7 @@ namespace TRMDataManager.Library.DataAccess
                 CashierId = cashierId
             };
 
-            using (SqlDataAccess sql = new SqlDataAccess())
+            using (SqlDataAccess sql = new SqlDataAccess(_config))
             {
                 try
                 {
@@ -123,7 +131,7 @@ namespace TRMDataManager.Library.DataAccess
         /// </summary>
         public List<SaleReportModel> GetSaleReport()
         {
-            SqlDataAccess sql = new SqlDataAccess();
+            SqlDataAccess sql = new SqlDataAccess(_config);
 
             var output = sql.LoadData<SaleReportModel, dynamic>("dbo.spSale_SaleReport", new { }, "TRMData");
 

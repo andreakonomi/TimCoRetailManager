@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.Extensions.Configuration;
 
 namespace TRMDataManager.Library.Internal.DataAccess
 {
@@ -15,13 +16,21 @@ namespace TRMDataManager.Library.Internal.DataAccess
     /// </summary>
     internal class SqlDataAccess : IDisposable
     {
+        private readonly IConfiguration _config;
+
+        public SqlDataAccess(IConfiguration config)
+        {
+            _config = config;
+        }
+
         /// <summary>
         /// Gets the connection string from the web.config for the given name. Grabs the config file
         /// of the caller application that has summoned it.
         /// </summary>
         public string GetConnectionString(string name)
         {
-            return ConfigurationManager.ConnectionStrings[name].ConnectionString;
+            return _config.GetConnectionString(name);
+            //return ConfigurationManager.ConnectionStrings[name].ConnectionString;
         }
 
         /// <summary>
