@@ -25,7 +25,7 @@ namespace TRMApi.Controllers
 
         [Route("/token")]
         [HttpPost]
-        private async Task<IActionResult> Create(string username, string password, string grant_type)
+        public async Task<IActionResult> Create(string username, string password, string grant_type)
         {
             if (await IsValidUsernameAndPassword(username, password))
             {
