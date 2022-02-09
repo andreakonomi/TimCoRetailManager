@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Caliburn.Micro;
 using TRMDesktopUI.EventModels;
@@ -26,37 +27,47 @@ namespace TRMDesktopUI.ViewModels
             _user = user;
             _apiHelper = apiHelper;
 
-            _events.Subscribe(this);
+            _events.SubscribeOnPublishedThread(this);
 
-            ActivateItem(IoC.Get<LoginViewModel>());
+            ActivateItemAsync(IoC.Get<LoginViewModel>(), new CancellationToken());
         }
 
         public bool IsLoggedIn => !string.IsNullOrWhiteSpace(_user.Token);
 
         public void ExitApplication()
         {
-            TryClose();
+            TryCloseAsync();
         }
 
-        public void UserManagment()
+        public async Task UserManagment()
         {
-            ActivateItem(IoC.Get<UserDisplayViewModel>()); 
+            await ActivateItemAsync(IoC.Get<UserDisplayViewModel>(), new CancellationToken()); 
         }
 
-        public void LogOut()
+        public async Task LogOut()
         {
             _user.ResetUserModel();     // Clear method inside the model itself, special case when you put a method in a model.
             _apiHelper.LogOffUser();
-            ActivateItem(IoC.Get<LoginViewModel>());
+            await ActivateItemAsync(IoC.Get<LoginViewModel>(), new CancellationToken());
             NotifyOfPropertyChange(() => IsLoggedIn);
         }
 
         // subscriber to the LogOnEvent event
-        public void Handle(LogOnEvent message)
+        //public void Handle(LogOnEvent message)
+        //{
+        //    // you can only have one item open at a time when iheriting from conductor, conducts from one to another
+        //    // so the Login Page deactivates it automatically
+        //    ActivateItem(_salesVM);
+        //    //notify the logout button to reset
+        //    NotifyOfPropertyChange(() => IsLoggedIn);
+        //}
+
+        // subscriber to the LogOnEvent
+        public async Task HandleAsync(LogOnEvent message, CancellationToken cancellationToken)
         {
             // you can only have one item open at a time when iheriting from conductor, conducts from one to another
             // so the Login Page deactivates it automatically
-            ActivateItem(_salesVM);
+            await ActivateItemAsync(_salesVM, cancellationToken);
             //notify the logout button to reset
             NotifyOfPropertyChange(() => IsLoggedIn);
         }
